@@ -31,12 +31,13 @@ class DataLoader():
             endId = len(self.data_files)
 
         while current < endId:
-            current += 1
-
             # todo: load images and labels
             # hint: scale images between 0 and 1
             # hint: if training takes too long or memory overflow, reduce image size!
-
+            data_image = np.array(Image.open(self.data_files[current]), dtype=np.float32)
+            label_image = np.array(Image.open(self.label_files[current]), dtype=np.float32)
+            data_image /= 255
+            current += 1
             yield (data_image, label_image)
 
     def setMode(self, mode):

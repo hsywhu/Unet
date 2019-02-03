@@ -13,8 +13,13 @@ from torchvision import transforms
 
 import matplotlib.pyplot as plt
 
-from model import UNet
-from dataloader import DataLoader
+# settings on mac
+from Unet.model import UNet
+from Unet.dataloader import DataLoader
+
+# settings on windows/ubuntu
+# from model import UNet
+# from dataloader import DataLoader
 
 def train_net(net,
               epochs=5,
@@ -45,11 +50,24 @@ def train_net(net,
             shape = img.shape
             label = label - 1
             # todo: create image tensor: (N,C,H,W) - (batch size=1,channels=1,height,width)
+            img = np.expand_dims(img, axis=0)
+            img = np.expand_dims(img, axis=0)
+            img_tensor = torch.from_numpy(img)
+            label_tensor = torch.from_numpy(label)
+
 
             # todo: load image tensor to gpu
-            #if gpu:
+            if gpu:
+                img_tensor.cuda()
 
             # todo: get prediction and getLoss()
+            optimizer.zero_grad()
+            pred = net(img_tensor)
+
+            loss = getLoss(pred, label_tensor)
+
+            loss.backward()
+            optimizer.step()
 
             epoch_loss += loss.item()
  
@@ -88,11 +106,17 @@ def getLoss(pred_label, target_label):
 
 def softmax(input):
     # todo: implement softmax function
+    sum = torch.sum(torch.exp(input), dim=1)
+    sum = sum.expand(input.size())
+    p = torch.div(torch.exp(input), sum)
     return p
 
 def cross_entropy(input, targets):
     # todo: implement cross entropy
     # Hint: use the choose function
+    pred = choose(input, targets)
+    ce = torch.sum(torch.neg(torch.log(pred)))/(pred.size()[0]*pred.size()[1])
+
     return ce
 
 # Workaround to use numpy.choose() with PyTorch

@@ -7,18 +7,65 @@ class UNet(nn.Module):
         super(UNet, self).__init__()
         # todo
         # Hint: Do not use ReLU in last convolutional set of up-path (128-64-64) for stability reasons!
+        self.maxPool = nn.MaxPool2d(2, stride=2)
+        self.upConv1 = nn.ConvTranspose2d(1024, 512, 2, stride = 2)
+        self.upConv2 = nn.ConvTranspose2d(512, 256, 2, stride = 2)
+        self.upConv3 = nn.ConvTranspose2d(256, 128, 2, stride = 2)
+        self.upConv4 = nn.ConvTranspose2d(128, 64, 2, stride = 2)
+        self.conv1x1 = nn.Conv2d(64, n_classes, 1)
 
     def forward(self, x):
         # todo
+        down = downStep(1, 64)
+        downStep_1_res = down(x)
+
+        downStep_2_res = self.maxPool(downStep_1_res)
+        down = downStep(64, 128)
+        downStep_2_res = down(downStep_2_res)
+
+        downStep_3_res = self.maxPool(downStep_2_res)
+        down = downStep(128, 256)
+        downStep_3_res = down(downStep_3_res)
+
+        downStep_4_res = self.maxPool(downStep_3_res)
+        down = downStep(256, 512)
+        downStep_4_res = down(downStep_4_res)
+
+        downStep_5_res = self.maxPool(downStep_4_res)
+        down = downStep(512, 1024)
+        downStep_5_res = down(downStep_5_res)
+
+        upStep_1_res = self.upConv1(downStep_5_res)
+        up = upStep(1024, 512)
+        upStep_1_res = up(upStep_1_res, downStep_4_res)
+
+        upStep_2_res = self.upConv2(upStep_1_res)
+        up = upStep(512, 256)
+        upStep_2_res = up(upStep_2_res, downStep_3_res)
+
+        upStep_3_res = self.upConv3(upStep_2_res)
+        up = upStep(256, 128)
+        upStep_3_res = up(upStep_3_res, downStep_2_res)
+
+        upStep_4_res = self.upConv4(upStep_3_res)
+        up = upStep(128, 64, withReLU = False)
+        upStep_4_res = up(upStep_4_res, downStep_1_res)
+
+        x = self.conv1x1(upStep_4_res)
+
         return x
 
 class downStep(nn.Module):
     def __init__(self, inC, outC):
         super(downStep, self).__init__()
         # todo
+        self.conv1 = nn.Conv2d(inC, outC, 3)
+        self.conv2 = nn.Conv2d(outC, outC, 3)
 
     def forward(self, x):
         # todo
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
         return x
 
 class upStep(nn.Module):
@@ -27,8 +74,29 @@ class upStep(nn.Module):
         # todo
         # Do not forget to concatenate with respective step in contracting path
         # Hint: Do not use ReLU in last convolutional set of up-path (128-64-64) for stability reasons!
+        self.conv1 = nn.Conv2d(inC, outC, 3)
+        self.conv2 = nn.Conv2d(outC, outC, 3)
+        self.withReLU = withReLU
 
     def forward(self, x, x_down):
         # todo
-        
+        tw = x.size()[2]
+        th = x.size()[3]
+        # n, c, tw, th = x.size()
+        x_down = self.__crop(x_down, tw, th)
+        x = torch.cat((x_down, x), 1)
+        if self.withReLU:
+            x = F.relu(self.conv1(x))
+            x = F.relu(self.conv2(x))
+        else:
+            x = self.conv1(x)
+            x = self.conv2(x)
         return x
+
+    def __crop(self, variable, tw, th):
+        # n, c, w, h = variable.size
+        w = variable.size()[2]
+        h = variable.size()[3]
+        x1 = int(round((w - tw) / 2.))
+        y1 = int(round((h - th) / 2.))
+        return variable[:, :, x1:x1 + tw, y1:y1 + th]
