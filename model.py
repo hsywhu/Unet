@@ -13,43 +13,38 @@ class UNet(nn.Module):
         self.upConv3 = nn.ConvTranspose2d(256, 128, 2, stride = 2)
         self.upConv4 = nn.ConvTranspose2d(128, 64, 2, stride = 2)
         self.conv1x1 = nn.Conv2d(64, n_classes, 1)
+        self.down1 = downStep(1, 64)
+        self.down2 = downStep(64, 128)
+        self.down3 = downStep(128, 256)
+        self.down4 = downStep(256, 512)
+        self.down5 = downStep(512, 1024)
+        self.up1 = upStep(1024, 512)
+        self.up2 = upStep(512, 256)
+        self.up3 = upStep(256, 128)
+        self.up4 = upStep(128, 64, withReLU=False)
+
 
     def forward(self, x):
         # todo
-        down = downStep(1, 64)
-        downStep_1_res = down(x)
-
+        # down = downStep(1, 64)
+        downStep_1_res = self.down1(x)
         downStep_2_res = self.maxPool(downStep_1_res)
-        down = downStep(64, 128)
-        downStep_2_res = down(downStep_2_res)
-
+        downStep_2_res = self.down2(downStep_2_res)
         downStep_3_res = self.maxPool(downStep_2_res)
-        down = downStep(128, 256)
-        downStep_3_res = down(downStep_3_res)
-
+        downStep_3_res = self.down3(downStep_3_res)
         downStep_4_res = self.maxPool(downStep_3_res)
-        down = downStep(256, 512)
-        downStep_4_res = down(downStep_4_res)
-
+        downStep_4_res = self.down4(downStep_4_res)
         downStep_5_res = self.maxPool(downStep_4_res)
-        down = downStep(512, 1024)
-        downStep_5_res = down(downStep_5_res)
+        downStep_5_res = self.down5(downStep_5_res)
 
         upStep_1_res = self.upConv1(downStep_5_res)
-        up = upStep(1024, 512)
-        upStep_1_res = up(upStep_1_res, downStep_4_res)
-
+        upStep_1_res = self.up1(upStep_1_res, downStep_4_res)
         upStep_2_res = self.upConv2(upStep_1_res)
-        up = upStep(512, 256)
-        upStep_2_res = up(upStep_2_res, downStep_3_res)
-
+        upStep_2_res = self.up2(upStep_2_res, downStep_3_res)
         upStep_3_res = self.upConv3(upStep_2_res)
-        up = upStep(256, 128)
-        upStep_3_res = up(upStep_3_res, downStep_2_res)
-
+        upStep_3_res = self.up3(upStep_3_res, downStep_2_res)
         upStep_4_res = self.upConv4(upStep_3_res)
-        up = upStep(128, 64, withReLU = False)
-        upStep_4_res = up(upStep_4_res, downStep_1_res)
+        upStep_4_res = self.up4(upStep_4_res, downStep_1_res)
 
         x = self.conv1x1(upStep_4_res)
 

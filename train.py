@@ -14,12 +14,12 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 
 # settings on mac
-from Unet.model import UNet
-from Unet.dataloader import DataLoader
+# from Unet.model import UNet
+# from Unet.dataloader import DataLoader
 
 # settings on windows/ubuntu
-# from model import UNet
-# from dataloader import DataLoader
+from model import UNet
+from dataloader import DataLoader
 
 def train_net(net,
               epochs=5,
@@ -28,7 +28,7 @@ def train_net(net,
               lr=0.1,
               val_percent=0.1,
               save_cp=True,
-              gpu=False):
+              gpu=True):
     loader = DataLoader(data_dir)
 
     N_train = loader.n_train()
@@ -50,15 +50,12 @@ def train_net(net,
             shape = img.shape
             label = label - 1
             # todo: create image tensor: (N,C,H,W) - (batch size=1,channels=1,height,width)
-            img = np.expand_dims(img, axis=0)
-            img = np.expand_dims(img, axis=0)
-            img_tensor = torch.from_numpy(img)
+            img_tensor = torch.from_numpy(img.reshape(1,1,shape[0],shape[1])).float()
             label_tensor = torch.from_numpy(label)
-
 
             # todo: load image tensor to gpu
             if gpu:
-                img_tensor.cuda()
+                img_tensor = img_tensor.cuda()
 
             # todo: get prediction and getLoss()
             optimizer.zero_grad()
@@ -138,7 +135,7 @@ def get_args():
     parser.add_option('-e', '--epochs', dest='epochs', default=5, type='int', help='number of epochs')
     parser.add_option('-c', '--n-classes', dest='n_classes', default=2, type='int', help='number of classes')
     parser.add_option('-d', '--data-dir', dest='data_dir', default='data/cells/', help='data directory')
-    parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=False, help='use cuda')
+    parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=True, help='use cuda')
     parser.add_option('-l', '--load', dest='load', default=False, help='load file model')
 
     (options, args) = parser.parse_args()
