@@ -34,8 +34,12 @@ class DataLoader():
             # todo: load images and labels
             # hint: scale images between 0 and 1
             # hint: if training takes too long or memory overflow, reduce image size!
-            data_image = np.array(Image.open(self.data_files[current]), dtype=np.float32)
-            label_image = np.array(Image.open(self.label_files[current]), dtype=np.float32)
+            img = Image.open(self.data_files[current])
+            img = img.resize((572, 572))
+            data_image = np.array(img, dtype=np.float32)
+            label = Image.open(self.label_files[current])
+            label = label.resize((388, 388))
+            label_image = np.array(label, dtype=np.long)
             data_image /= 255
             current += 1
             yield (data_image, label_image)
