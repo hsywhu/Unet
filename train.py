@@ -27,7 +27,7 @@ def train_net(net,
               epochs=5,
               data_dir='data/cells/',
               n_classes=2,
-              lr=0.1,
+              lr=0.001,
               val_percent=0.1,
               save_cp=True,
               gpu=True):
@@ -61,7 +61,7 @@ def train_net(net,
             # todo: load image tensor to gpu
             if gpu:
                 img_tensor = img_tensor.cuda()
-                label_tensor = label_tensor.cuda()
+                # label_tensor = label_tensor.cuda()
 
             # todo: get prediction and getLoss()
             pred = net(img_tensor)
@@ -139,7 +139,7 @@ def choose(pred_label, true_labels):
     
 def get_args():
     parser = OptionParser()
-    parser.add_option('-e', '--epochs', dest='epochs', default=5, type='int', help='number of epochs')
+    parser.add_option('-e', '--epochs', dest='epochs', default=15, type='int', help='number of epochs')
     parser.add_option('-c', '--n-classes', dest='n_classes', default=2, type='int', help='number of classes')
     parser.add_option('-d', '--data-dir', dest='data_dir', default='data/cells/', help='data directory')
     parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=True, help='use cuda')

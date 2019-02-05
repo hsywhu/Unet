@@ -69,7 +69,8 @@ class DataLoader():
         data_length = len(self.data_files)
         return np.int_(data_length - np.floor(data_length * self.test_percent))
 
-    # def __applyDataAugmentation(self, img, label):
+    def __applyDataAugmentation(self, img, label):
 
 
-    # def horizontalFlip(self, img, label):
+    def horizontalFlip(self, img, label):
+
