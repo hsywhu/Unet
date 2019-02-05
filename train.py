@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 # from Unet.dataloader import DataLoader
 
 # settings on windows/ubuntu
-# from model import UNet
-from unet import UNet
+from model import UNet
+# from unet import UNet
 from dataloader import DataLoader
 
 def train_net(net,
