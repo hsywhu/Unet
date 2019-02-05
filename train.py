@@ -55,8 +55,8 @@ def train_net(net,
             label = label - 1
             # todo: create image tensor: (N,C,H,W) - (batch size=1,channels=1,height,width)
             img_tensor = torch.from_numpy(img.reshape(1,1,shape[0],shape[1]))
-            label_tensor = torch.from_numpy(label.reshape(1, label.shape[0], label.shape[1]))
-            # label_tensor = torch.from_numpy(label)
+            # label_tensor = torch.from_numpy(label.reshape(1, label.shape[0], label.shape[1]))
+            label_tensor = torch.from_numpy(label)
 
             # todo: load image tensor to gpu
             if gpu:
@@ -65,8 +65,8 @@ def train_net(net,
 
             # todo: get prediction and getLoss()
             pred = net(img_tensor)
-            # loss = getLoss(pred, label_tensor)
-            loss = F.cross_entropy(pred, label_tensor)
+            loss = getLoss(pred, label_tensor)
+            # loss = F.cross_entropy(pred, label_tensor)
 
             optimizer.zero_grad()
             loss.backward()
@@ -74,7 +74,7 @@ def train_net(net,
 
             epoch_loss += loss.item()
  
-            # print('Training sample %d / %d - Loss: %.6f' % (i+1, N_train, loss.item()))
+            print('Training sample %d / %d - Loss: %.6f' % (i+1, N_train, loss.item()))
 
             # optimize weights
 
@@ -94,13 +94,6 @@ def train_net(net,
             pred = net(img_torch)
             pred_sm = softmax(pred)
             _,pred_label = torch.max(pred_sm,1)
-            # print(pred.cpu().numpy())
-            # np_pred = pred.cpu().numpy()
-            print(pred.shape)
-            for i in range(pred.shape[2]):
-                for j in range(pred.shape[3]):
-                    if pred[0, 0, i, j] < pred[0, 1, i, j]:
-                        print("fuck me baby")
 
             plt.subplot(1, 3, 1)
             plt.imshow(img*255.)
@@ -125,7 +118,6 @@ def cross_entropy(input, targets):
     # todo: implement cross entropy
     # Hint: use the choose function
     pred = choose(input, targets)
-    print(pred.shape)
     # ce = torch.sum(torch.neg(torch.log(pred)))/(pred.size()[0]*pred.size()[1])
     ce = torch.mean(torch.neg(torch.log(pred)))
 
@@ -147,7 +139,7 @@ def choose(pred_label, true_labels):
     
 def get_args():
     parser = OptionParser()
-    parser.add_option('-e', '--epochs', dest='epochs', default=1, type='int', help='number of epochs')
+    parser.add_option('-e', '--epochs', dest='epochs', default=5, type='int', help='number of epochs')
     parser.add_option('-c', '--n-classes', dest='n_classes', default=2, type='int', help='number of classes')
     parser.add_option('-d', '--data-dir', dest='data_dir', default='data/cells/', help='data directory')
     parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=True, help='use cuda')

@@ -56,11 +56,14 @@ class downStep(nn.Module):
         # todo
         self.conv1 = nn.Conv2d(inC, outC, 3)
         self.conv2 = nn.Conv2d(outC, outC, 3)
+        self.BN = nn.modules.BatchNorm2d(outC)
 
     def forward(self, x):
         # todo
         x = F.relu(self.conv1(x))
+        x = self.BN(x)
         x = F.relu(self.conv2(x))
+        x = self.BN(x)
         return x
 
 class upStep(nn.Module):
@@ -71,27 +74,30 @@ class upStep(nn.Module):
         # Hint: Do not use ReLU in last convolutional set of up-path (128-64-64) for stability reasons!
         self.conv1 = nn.Conv2d(inC, outC, 3)
         self.conv2 = nn.Conv2d(outC, outC, 3)
+        self.BN = nn.modules.BatchNorm2d(outC)
         self.withReLU = withReLU
 
     def forward(self, x, x_down):
         # todo
-        tw = x.size()[2]
-        th = x.size()[3]
+        th = x.size()[2]
+        tw = x.size()[3]
         # n, c, tw, th = x.size()
-        x_down = self.__crop(x_down, tw, th)
-        x = torch.cat((x_down, x), 1)
+        x_down = self.__crop(x_down, th, tw)
+        x = torch.cat([x, x_down], 1)
         if self.withReLU:
             x = F.relu(self.conv1(x))
+            x = self.BN(x)
             x = F.relu(self.conv2(x))
+            x = self.BN(x)
         else:
             x = self.conv1(x)
             x = self.conv2(x)
         return x
 
-    def __crop(self, variable, tw, th):
+    def __crop(self, variable, th, tw):
         # n, c, w, h = variable.size
-        w = variable.size()[2]
-        h = variable.size()[3]
-        x1 = int(round((w - tw) / 2.))
+        h = variable.size()[2]
+        w = variable.size()[3]
         y1 = int(round((h - th) / 2.))
-        return variable[:, :, x1:x1 + tw, y1:y1 + th]
+        x1 = int(round((w - tw) / 2.))
+        return variable[:, :, y1:y1 + th, x1:x1 + tw]
